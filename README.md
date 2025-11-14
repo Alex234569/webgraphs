@@ -1,37 +1,37 @@
-# WebGraphs - Приложение для финансовых графиков
+# WebGraphs
 
-SPA приложение на Laravel + Vue.js для демонстрации финансовых данных департамента.
+Веб-приложение для визуализации финансовых данных компании с использованием интерактивных графиков.
 
-## Технологии
+## Описание
 
-- **Backend**: Laravel 12
-- **Frontend**: Vue.js 3 (Composition API)
-- **UI Framework**: Element Plus
-- **Стили**: Less (с иерархией)
-- **Роутинг**: Vue Router 4
-- **Сборка**: Vite
-- **Окружение**: Docker Compose
+Система визуализации финансовой информации с разделением доступа по ролям. Предоставляет интерактивные графики для анализа доходов, расходов, бюджета и ROI проектов.
 
-## Структура проекта
+**Ключевые возможности:**
+- Визуализация финансовых данных (доходы, расходы, прибыль)
+- Аналитические графики для администраторов (бюджет vs факт, ROI)
+- Фильтрация по датам и периодам
+- Разграничение доступа по ролям (admin/user)
+- Session-based аутентификация
 
-```
-resources/js/
-├── App.vue              # Корневой компонент с навигацией
-├── app.js               # Точка входа + настройка Element Plus
-├── router/
-│   └── index.js         # Конфигурация маршрутов
-├── views/               # Страницы
-│   ├── Home.vue         # Главная
-│   └── Graphs.vue       # Графики
-└── components/          # Переиспользуемые компоненты (создавайте здесь)
-```
+## Технологический стек
 
-## Docker контейнеры
+**Backend:**
+- Laravel 12 (PHP 8.2)
+- MySQL 8.0
+- RESTful API
+- Sanctum (Session Auth)
 
-- **app** (PHP 8.2) - Laravel + Composer
-- **db** (MySQL 8.0) - База данных
-- **nginx** - http://localhost:8080
-- **web** (Node 22) - Vite dev server http://localhost:5173
+**Frontend:**
+- Vue.js 3 (Composition API)
+- Element Plus (UI компоненты)
+- ECharts (визуализация графиков)
+- Vue Router 4
+- Vite
+
+**Инфраструктура:**
+- Docker Compose
+- Nginx
+- Node.js 22
 
 ## Быстрый старт
 
@@ -39,66 +39,50 @@ resources/js/
 # Запуск контейнеров
 docker compose up -d
 
-# Проверка статуса
-docker compose ps
+# Установка зависимостей (первый запуск)
+docker compose exec app composer install
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate:fresh --seed
+docker compose exec web npm install
+```
 
-# Логи Vite (для отладки)
-docker compose logs -f web
+**Доступ к приложению:**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8080
 
-# Остановка
+**Тестовые пользователи:**
+
+| Email | Пароль | Роль |
+|-------|--------|------|
+| admin@app.me | admin | Admin |
+| user@app.me | user | User |
+
+## Документация
+
+Полная документация проекта находится в директории `docs/`:
+
+- **[INSTALLATION.md](docs/INSTALLATION.md)** - Детальная инструкция по установке, настройке окружения и развертыванию
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Описание архитектуры системы, структуры проекта и принятых технических решений
+- **[API.md](docs/API.md)** - Полная спецификация API endpoints с примерами запросов и ответов
+- **[AUTHENTICATION.md](docs/AUTHENTICATION.md)** - Документация по аутентификации и авторизации
+
+## Основные команды
+
+```bash
+# Запуск и остановка
+docker compose up -d
 docker compose down
-```
 
-## Полезные команды
+# Просмотр логов
+docker compose logs -f app
 
-### Laravel (PHP)
-```bash
-# Artisan команды
+# Выполнение команд Laravel
 docker compose exec app php artisan migrate
-docker compose exec app php artisan make:controller GraphController
+docker compose exec app php artisan migrate:fresh --seed
 
-# Composer
-docker compose exec app composer require package/name
+# Установка пакетов
+docker compose exec app composer install
+docker compose exec web npm install
 ```
 
-### Frontend (Node)
-```bash
-# Установка npm пакетов
-docker compose exec web npm install package-name
-
-# Запуск внутри контейнера
-docker compose exec web sh
-```
-
-## Работа со стилями
-
-Используем **Less** с вложенностью:
-
-```vue
-<style lang="less" scoped>
-.my-component {
-  padding: 20px;
-
-  .nested-element {
-    color: #409eff;
-
-    &:hover {
-      opacity: 0.8;
-    }
-  }
-}
-</style>
-```
-
-## Element Plus компоненты
-
-Доступны глобально, импорт не нужен:
-
-```vue
-<template>
-  <el-button type="primary">Кнопка</el-button>
-  <el-card>Карточка</el-card>
-  <el-table :data="tableData">...</el-table>
-</template>
-```
-
+Подробные инструкции см. в [INSTALLATION.md](docs/INSTALLATION.md)

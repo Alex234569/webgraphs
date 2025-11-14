@@ -5,7 +5,6 @@
       <el-header v-if="isAuthenticated" class="app-header">
         <div class="header-content">
           <div class="header-title">
-            <el-icon :size="24" color="#409eff"><TrendCharts /></el-icon>
             <h1 class="title">Финансовая Аналитика</h1>
           </div>
 

@@ -4,10 +4,10 @@
 
 После выполнения `php artisan migrate:fresh --seed` создаются 2 пользователя:
 
-| Email | Пароль | Роль |
-|-------|--------|------|
-| admin@app.me | **admin** | admin |
-| user@app.me | **user** | user |
+| Email        | Пароль    | Роль   |
+|--------------|-----------|--------|
+| admin@app.me | **admin** | admin  |
+| user@app.me  | **user**  | user   |
 
 ## Как работает авторизация
 
@@ -126,10 +126,4 @@ docker compose exec db mysql -u webgraphs_user -psecret webgraphs -e "SELECT * F
 **Очистить сессии:**
 ```bash
 docker compose exec app php artisan session:clear
-```
-
-**Проверить текущего пользователя (tinker):**
-```bash
-docker compose exec app php artisan tinker
->>> auth()->user()
 ```
