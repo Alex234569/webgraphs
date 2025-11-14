@@ -101,3 +101,4 @@ docker compose exec web sh
   <el-table :data="tableData">...</el-table>
 </template>
 ```
+

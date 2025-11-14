@@ -2,7 +2,9 @@
   <div class="login-page">
     <el-card class="login-card">
       <template #header>
-        <h2>Вход в систему</h2>
+        <div class="login-header">
+          <h2>Финансовая Аналитика</h2>
+        </div>
       </template>
 
       <el-form
@@ -16,7 +18,7 @@
           <el-input
             v-model="loginForm.email"
             type="email"
-            placeholder="admin@app.me"
+            placeholder="Введите email"
             size="large"
             :prefix-icon="User"
           />
@@ -52,8 +54,28 @@
       <div class="test-accounts">
         <p class="hint-text">Тестовые учетные записи:</p>
         <div class="accounts-grid">
-          <el-tag type="success">admin@app.me / admin</el-tag>
-          <el-tag type="info">user@app.me / user</el-tag>
+          <div class="account-item">
+            <el-tag type="success">admin@app.me / admin</el-tag>
+            <el-button
+              size="small"
+              type="success"
+              :loading="isLoading"
+              @click="quickLogin('admin@app.me', 'admin')"
+            >
+              Войти
+            </el-button>
+          </div>
+          <div class="account-item">
+            <el-tag type="info">user@app.me / user</el-tag>
+            <el-button
+              size="small"
+              type="info"
+              :loading="isLoading"
+              @click="quickLogin('user@app.me', 'user')"
+            >
+              Войти
+            </el-button>
+          </div>
         </div>
       </div>
     </el-card>
@@ -103,6 +125,17 @@ const handleLogin = async () => {
     }
   });
 };
+
+const quickLogin = async (email, password) => {
+  const result = await login(email, password);
+
+  if (result.success) {
+    ElMessage.success('Успешный вход!');
+    router.push('/');
+  } else {
+    ElMessage.error(result.message || 'Ошибка входа');
+  }
+};
 </script>
 
 <style lang="less" scoped>
@@ -122,10 +155,17 @@ const handleLogin = async () => {
       text-align: center;
       background: #f5f7fa;
 
-      h2 {
-        margin: 0;
-        font-size: 24px;
-        color: #303133;
+      .login-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+
+        h2 {
+          margin: 0;
+          font-size: 24px;
+          color: #303133;
+        }
       }
     }
 
@@ -142,9 +182,17 @@ const handleLogin = async () => {
         flex-direction: column;
         gap: 8px;
 
-        .el-tag {
-          justify-content: center;
-          font-family: 'Courier New', monospace;
+        .account-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+
+          .el-tag {
+            flex: 1;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+          }
         }
       }
     }

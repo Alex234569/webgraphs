@@ -1,134 +1,52 @@
 <template>
   <div class="graphs-page">
     <div class="container">
-      <el-card class="header-card">
-        <h2 class="page-title">Финансовые графики</h2>
-        <p class="page-description">
-          Здесь будут отображаться интерактивные графики с финансовыми данными департамента
-        </p>
-      </el-card>
+      <el-tabs v-model="activeTab">
+        <el-tab-pane label="Финансы" name="finance">
+          <FinanceTab :months="months" v-model:date-range="dateRange" />
+        </el-tab-pane>
 
-      <el-row :gutter="20" class="charts-grid">
-        <el-col
-          v-for="chart in charts"
-          :key="chart.id"
-          :xs="24"
-          :sm="12"
-          :lg="8"
-        >
-          <el-card class="chart-card" shadow="hover">
-            <template #header>
-              <h3>{{ chart.title }}</h3>
-            </template>
-            <p class="chart-description">{{ chart.description }}</p>
-            <div class="chart-placeholder">
-              <el-icon :size="48" color="#909399"><TrendCharts /></el-icon>
-              <span>График будет здесь</span>
-            </div>
-          </el-card>
-        </el-col>
-      </el-row>
+        <el-tab-pane label="Аналитика" name="analytics" :disabled="!isAdmin">
+          <AnalyticsTab :months="months" v-model:date-range="dateRange" />
+        </el-tab-pane>
+      </el-tabs>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { TrendCharts } from '@element-plus/icons-vue';
+import { ref, computed } from 'vue';
+import { useAuth } from '../composables/useAuth';
+import FinanceTab from '../components/tabs/FinanceTab.vue';
+import AnalyticsTab from '../components/tabs/AnalyticsTab.vue';
 
-const charts = ref([
-  {
-    id: 1,
-    title: 'Доходы по месяцам',
-    description: 'График доходов департамента за текущий год',
-  },
-  {
-    id: 2,
-    title: 'Расходы по категориям',
-    description: 'Распределение расходов по основным категориям',
-  },
-  {
-    id: 3,
-    title: 'Прибыль',
-    description: 'Динамика прибыли за последние 6 месяцев',
-  },
-  {
-    id: 4,
-    title: 'Бюджет vs Факт',
-    description: 'Сравнение планового и фактического бюджета',
-  },
-  {
-    id: 5,
-    title: 'ROI по проектам',
-    description: 'Возврат инвестиций по ключевым проектам',
-  },
-  {
-    id: 6,
-    title: 'Прогноз на квартал',
-    description: 'Прогнозируемые показатели на следующий квартал',
-  },
+const { isAdmin } = useAuth();
+const activeTab = ref('finance');
+
+// Date Range
+const dateRange = ref([
+  new Date(new Date().setMonth(new Date().getMonth() - 6)),
+  new Date()
 ]);
+
+// Вычисление количества месяцев между датами
+const months = computed(() => {
+  if (!dateRange.value || dateRange.value.length !== 2) return 6;
+
+  const [start, end] = dateRange.value;
+  const monthsDiff = (end.getFullYear() - start.getFullYear()) * 12 +
+                     (end.getMonth() - start.getMonth());
+  return Math.max(1, monthsDiff);
+});
 </script>
 
 <style lang="less" scoped>
 .graphs-page {
-  padding: 40px 20px;
+  padding: 20px;
 
   .container {
     max-width: 1400px;
     margin: 0 auto;
-
-    .header-card {
-      margin-bottom: 24px;
-
-      .page-title {
-        font-size: 28px;
-        font-weight: bold;
-        color: #303133;
-        margin-bottom: 8px;
-      }
-
-      .page-description {
-        font-size: 14px;
-        color: #606266;
-        margin: 0;
-      }
-    }
-
-    .charts-grid {
-      .chart-card {
-        margin-bottom: 20px;
-        height: 100%;
-
-        h3 {
-          margin: 0;
-          font-size: 18px;
-          font-weight: 600;
-        }
-
-        .chart-description {
-          font-size: 14px;
-          color: #909399;
-          margin-bottom: 16px;
-        }
-
-        .chart-placeholder {
-          background-color: #f5f7fa;
-          border-radius: 8px;
-          height: 200px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-
-          span {
-            color: #909399;
-            font-size: 14px;
-          }
-        }
-      }
-    }
   }
 }
 </style>

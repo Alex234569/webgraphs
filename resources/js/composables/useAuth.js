@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import axios from 'axios';
 
 // Глобальное состояние пользователя
@@ -68,18 +68,18 @@ export function useAuth() {
   };
 
   /**
-   * Проверка, является ли пользователь админом
+   * Проверка, является ли пользователь админом (computed для реактивности)
    */
-  const isAdmin = () => {
+  const isAdmin = computed(() => {
     return user.value?.role === 'admin';
-  };
+  });
 
   /**
-   * Проверка авторизации
+   * Проверка авторизации (computed для реактивности)
    */
-  const isAuthenticated = () => {
+  const isAuthenticated = computed(() => {
     return user.value !== null;
-  };
+  });
 
   return {
     user,

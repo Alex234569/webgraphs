@@ -2,26 +2,19 @@
   <div id="app">
     <el-container>
       <!-- Хедер только для авторизованных пользователей -->
-      <el-header v-if="isAuthenticated()" class="app-header">
+      <el-header v-if="isAuthenticated" class="app-header">
         <div class="header-content">
-          <h1 class="logo">WebGraphs</h1>
-
-          <el-menu
-            mode="horizontal"
-            :default-active="activeMenu"
-            router
-            class="main-menu"
-          >
-            <el-menu-item index="/">Главная</el-menu-item>
-            <el-menu-item index="/graphs">Графики</el-menu-item>
-          </el-menu>
+          <div class="header-title">
+            <el-icon :size="24" color="#409eff"><TrendCharts /></el-icon>
+            <h1 class="title">Финансовая Аналитика</h1>
+          </div>
 
           <div class="user-section">
             <el-dropdown @command="handleCommand">
               <span class="user-dropdown">
                 <el-avatar :size="32" :icon="UserFilled" />
                 <span class="user-name">{{ user?.name }}</span>
-                <el-tag v-if="isAdmin()" type="warning" size="small">Admin</el-tag>
+                <el-tag v-if="isAdmin" type="warning" size="small">Admin</el-tag>
               </span>
               <template #dropdown>
                 <el-dropdown-menu>
@@ -50,17 +43,13 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { UserFilled, SwitchButton } from '@element-plus/icons-vue';
+import { UserFilled, SwitchButton, TrendCharts } from '@element-plus/icons-vue';
 import { useAuth } from './composables/useAuth';
 
-const route = useRoute();
 const router = useRouter();
 const { user, isAuthenticated, isAdmin, logout } = useAuth();
-
-const activeMenu = computed(() => route.path);
 
 const handleCommand = async (command) => {
   if (command === 'logout') {
@@ -76,7 +65,7 @@ const handleCommand = async (command) => {
 <style lang="less" scoped>
 .app-header {
   background: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 0;
 
   .header-content {
@@ -84,25 +73,27 @@ const handleCommand = async (command) => {
     margin: 0 auto;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     height: 100%;
-    gap: 20px;
+    padding: 0 20px;
 
-    .logo {
-      font-size: 24px;
-      font-weight: bold;
-      color: #409eff;
-      margin: 0;
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
       flex-shrink: 0;
-    }
 
-    .main-menu {
-      flex: 1;
-      border: none;
+      .title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #303133;
+        margin: 0;
+        letter-spacing: -0.5px;
+      }
     }
 
     .user-section {
       flex-shrink: 0;
-      margin-left: auto;
 
       .user-dropdown {
         display: flex;
@@ -142,5 +133,17 @@ const handleCommand = async (command) => {
 
 :deep(.el-main) {
   padding: 0;
+}
+
+@media (max-width: 768px) {
+  .app-header .header-content {
+    .header-title .title {
+      font-size: 16px;
+    }
+
+    .user-section .user-dropdown .user-name {
+      display: none;
+    }
+  }
 }
 </style>
