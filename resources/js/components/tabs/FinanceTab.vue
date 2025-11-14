@@ -95,6 +95,11 @@ const props = defineProps({
 
 const emit = defineEmits(['update:dateRange']);
 
+// Обработчик изменения диапазона дат
+const updateDateRange = (value) => {
+  emit('update:dateRange', value);
+};
+
 // Быстрые фильтры для дат
 const dateShortcuts = [
   {
