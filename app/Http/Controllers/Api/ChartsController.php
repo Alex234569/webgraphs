@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Revenue;
-use App\Models\Expense;
-use App\Models\Budget;
+use App\Models\FinanceMonthlySummary;
+use App\Models\ExpenseCategoryMonthlySummary;
+use App\Models\BudgetMonthlySummary;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,17 +18,24 @@ class ChartsController extends Controller
      */
     public function revenue(Request $request)
     {
-        $months = $request->input('months', 12);
+        $monthsCount = $request->input('months', 12);
+        $startDate = Carbon::now()->subMonths($monthsCount);
 
-        $data = Revenue::selectRaw('DATE_FORMAT(date, "%Y-%m") as month, SUM(amount) as total')
-            ->where('date', '>=', Carbon::now()->subMonths($months))
-            ->groupBy('month')
+        $data = FinanceMonthlySummary::selectRaw('year, month, revenue_total as total')
+            ->where(function ($query) use ($startDate) {
+                $query->where('year', '>', $startDate->year)
+                    ->orWhere(function ($q) use ($startDate) {
+                        $q->where('year', '=', $startDate->year)
+                            ->where('month', '>=', $startDate->month);
+                    });
+            })
+            ->orderBy('year')
             ->orderBy('month')
             ->get();
 
         $labels = $data->map(function ($item) {
             Carbon::setLocale('ru');
-            return Carbon::parse($item->month)->translatedFormat('M Y');
+            return Carbon::create($item->year, $item->month, 1)->translatedFormat('M Y');
         });
 
         $values = $data->pluck('total');
@@ -45,10 +52,17 @@ class ChartsController extends Controller
      */
     public function expenses(Request $request)
     {
-        $months = $request->input('months', 12);
+        $monthsCount = $request->input('months', 12);
+        $startDate = Carbon::now()->subMonths($monthsCount);
 
-        $data = Expense::select('category', DB::raw('SUM(amount) as total'))
-            ->where('date', '>=', Carbon::now()->subMonths($months))
+        $data = ExpenseCategoryMonthlySummary::select('category', DB::raw('SUM(expense_total) as total'))
+            ->where(function ($query) use ($startDate) {
+                $query->where('year', '>', $startDate->year)
+                    ->orWhere(function ($q) use ($startDate) {
+                        $q->where('year', '=', $startDate->year)
+                            ->where('month', '>=', $startDate->month);
+                    });
+            })
             ->groupBy('category')
             ->get();
 
@@ -64,35 +78,24 @@ class ChartsController extends Controller
      */
     public function profit(Request $request)
     {
-        $months = $request->input('months', 6);
+        $monthsCount = $request->input('months', 6);
+        $startDate = Carbon::now()->subMonths($monthsCount);
 
-        $revenues = Revenue::selectRaw('DATE_FORMAT(date, "%Y-%m") as month, SUM(amount) as total')
-            ->where('date', '>=', Carbon::now()->subMonths($months))
-            ->groupBy('month')
+        $data = FinanceMonthlySummary::select('year', 'month', 'profit_total')
+            ->where(function ($query) use ($startDate) {
+                $query->where('year', '>', $startDate->year)
+                    ->orWhere(function ($q) use ($startDate) {
+                        $q->where('year', '=', $startDate->year)
+                            ->where('month', '>=', $startDate->month);
+                    });
+            })
+            ->orderBy('year')
             ->orderBy('month')
-            ->get()
-            ->keyBy('month');
-
-        $expenses = Expense::selectRaw('DATE_FORMAT(date, "%Y-%m") as month, SUM(amount) as total')
-            ->where('date', '>=', Carbon::now()->subMonths($months))
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get()
-            ->keyBy('month');
-
-        $monthsList = collect();
-        for ($i = $months - 1; $i >= 0; $i--) {
-            $month = Carbon::now()->subMonths($i)->format('Y-m');
-            $monthsList->push($month);
-        }
+            ->get();
 
         Carbon::setLocale('ru');
-        $labels = $monthsList->map(fn($m) => Carbon::parse($m)->translatedFormat('M Y'));
-        $profitData = $monthsList->map(function ($month) use ($revenues, $expenses) {
-            $revenue = $revenues->get($month)->total ?? 0;
-            $expense = $expenses->get($month)->total ?? 0;
-            return $revenue - $expense;
-        });
+        $labels = $data->map(fn($item) => Carbon::create($item->year, $item->month, 1)->translatedFormat('M Y'));
+        $profitData = $data->pluck('profit_total');
 
         return response()->json([
             'labels' => $labels,
@@ -105,7 +108,7 @@ class ChartsController extends Controller
      */
     public function availableBudgetMonths()
     {
-        $months = Budget::selectRaw('DISTINCT year, month')
+        $months = BudgetMonthlySummary::selectRaw('DISTINCT year, month')
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc')
             ->get()
@@ -137,7 +140,7 @@ class ChartsController extends Controller
             $year = $request->input('year');
             $month = $request->input('month');
 
-            $data = Budget::select('category', 'planned_amount', 'actual_amount')
+            $data = BudgetMonthlySummary::select('category', 'planned_amount', 'actual_amount')
                 ->where('year', $year)
                 ->where('month', $month)
                 ->get();
@@ -149,18 +152,17 @@ class ChartsController extends Controller
             ]);
         }
 
-        // Иначе показываем за период (для обратной совместимости)
-        $months = $request->input('months', 6);
-        $startDate = Carbon::now()->subMonths($months);
+        // Иначе показываем за период
+        $monthsCount = $request->input('months', 6);
+        $startDate = Carbon::now()->subMonths($monthsCount);
 
-        $data = Budget::select('category', DB::raw('SUM(planned_amount) as total_planned'), DB::raw('SUM(actual_amount) as total_actual'))
-            ->where('year', '>=', $startDate->year)
+        $data = BudgetMonthlySummary::select('category', DB::raw('SUM(planned_amount) as total_planned'), DB::raw('SUM(actual_amount) as total_actual'))
             ->where(function ($query) use ($startDate) {
                 $query->where('year', '>', $startDate->year)
-                      ->orWhere(function ($q) use ($startDate) {
-                          $q->where('year', '=', $startDate->year)
+                    ->orWhere(function ($q) use ($startDate) {
+                        $q->where('year', '=', $startDate->year)
                             ->where('month', '>=', $startDate->month);
-                      });
+                    });
             })
             ->groupBy('category')
             ->get();

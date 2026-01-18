@@ -92,163 +92,196 @@ http://localhost:8080/api
 
 ---
 
-### 2. Финансовые данные
+### 2. Аналитические данные (Графики)
 
-#### GET `/api/expenses`
-Получить список расходов
+Эти endpoints возвращают агрегированные данные из "data mart" (суммарных таблиц).
 
-**Требует:** аутентификацию
+#### GET `/api/charts/revenue`
+Доходы по месяцам
 
 **Query параметры:**
-```
-?period=month           # Период: month, quarter, year, custom
-&start_date=2025-01-01  # Начальная дата (для custom)
-&end_date=2025-12-31    # Конечная дата (для custom)
-&category=office        # Фильтр по категории (опционально)
-```
-
-**Примеры запросов:**
-```bash
-# Расходы за текущий месяц
-GET /api/expenses?period=month
-
-# Расходы за квартал
-GET /api/expenses?period=quarter
-
-# Расходы за произвольный период
-GET /api/expenses?period=custom&start_date=2025-01-01&end_date=2025-03-31
-
-# Расходы по категории
-GET /api/expenses?period=year&category=office
-```
+- `months` (int, default: 12) — количество месяцев для анализа.
 
 **Ответ:**
 ```json
-[
-  {
-    "id": 1,
-    "user_id": 1,
-    "amount": 15000.00,
-    "category": "office",
-    "description": "Офисная мебель",
-    "date": "2025-01-15",
-    "created_at": "2025-01-15T10:00:00.000000Z"
-  },
-  {
-    "id": 2,
-    "user_id": 1,
-    "amount": 8500.50,
-    "category": "salaries",
-    "description": "Зарплата сотрудников",
-    "date": "2025-01-20",
-    "created_at": "2025-01-20T10:00:00.000000Z"
-  }
-]
+{
+  "labels": ["Янв 2025", "Фев 2025"],
+  "data": [150000.00, 180000.00],
+  "total": 330000.00
+}
 ```
-
-**Авторизация:**
-- `admin` — видит все расходы
-- `user` — видит только свои расходы
-
-**Статусы:**
-- `200` — успех
-- `401` — не авторизован
 
 ---
 
-#### GET `/api/revenues`
-Получить список доходов
+#### GET `/api/charts/expenses`
+Расходы по категориям (агрегированные за период)
 
-**Требует:** аутентификацию
-
-**Query параметры:** (аналогично `/api/expenses`)
-```
-?period=month
-&start_date=2025-01-01
-&end_date=2025-12-31
-&source=sales           # Фильтр по источнику (опционально)
-```
+**Query параметры:**
+- `months` (int, default: 12) — период агрегации.
 
 **Ответ:**
 ```json
-[
-  {
-    "id": 1,
-    "user_id": 1,
-    "amount": 50000.00,
-    "source": "sales",
-    "description": "Продажа продукции",
-    "date": "2025-01-10",
-    "created_at": "2025-01-10T10:00:00.000000Z"
-  }
-]
+{
+  "categories": ["Офис", "Маркетинг"],
+  "data": [45000.00, 30000.00],
+  "total": 75000.00
+}
 ```
-
-**Статусы:**
-- `200` — успех
-- `401` — не авторизован
 
 ---
 
-#### GET `/api/budgets`
-Получить список бюджетов
-
-**Требует:** аутентификацию
+#### GET `/api/charts/profit`
+Прибыль по месяцам
 
 **Query параметры:**
-```
-?period=month           # Период бюджета
-&category=office        # Категория (опционально)
-```
+- `months` (int, default: 6)
 
 **Ответ:**
 ```json
-[
-  {
-    "id": 1,
-    "user_id": 1,
-    "amount": 100000.00,
-    "category": "office",
-    "period": "2025-01",
-    "created_at": "2025-01-01T00:00:00.000000Z"
-  }
-]
+{
+  "labels": ["Янв 2025", "Фев 2025"],
+  "data": [105000.00, 150000.00]
+}
 ```
-
-**Статусы:**
-- `200` — успех
-- `401` — не авторизован
 
 ---
 
-#### GET `/api/projects`
-Получить список проектов
-
-**Требует:** аутентификацию
-
-**Query параметры:**
-```
-?status=active          # Статус: active, completed, on_hold
-```
+#### GET `/api/charts/available-budget-months`
+Список месяцев, для которых есть бюджетные данные
 
 **Ответ:**
 ```json
 [
   {
-    "id": 1,
-    "user_id": 1,
-    "name": "Разработка сайта",
-    "budget": 200000.00,
-    "spent": 150000.00,
-    "status": "active",
-    "created_at": "2025-01-01T00:00:00.000000Z"
+    "value": { "year": 2025, "month": 1 },
+    "label": "Январь 2025"
   }
 ]
 ```
 
-**Статусы:**
-- `200` — успех
-- `401` — не авторизован
+---
+
+#### GET `/api/charts/budget-vs-fact`
+Сравнение плана и факта
+
+**Требует:** права администратора
+
+**Query параметры:**
+- `year`, `month` (опционально) — данные за конкретный месяц.
+- `months` (опционально, default: 6) — агрегация за период, если не указан конкретный месяц.
+
+**Ответ:**
+```json
+{
+  "categories": ["Офис", "Зарплаты"],
+  "planned": [50000.00, 100000.00],
+  "actual": [48000.00, 105000.00]
+}
+```
+
+---
+
+#### GET `/api/charts/roi`
+ROI по проектам
+
+**Требует:** права администратора
+
+**Ответ:**
+```json
+{
+  "projects": ["Project A"],
+  "roi": [15.5],
+  "investment": [100000.00],
+  "return": [115500.00],
+  "status": ["active"]
+}
+```
+
+---
+
+### 3. Отчеты и Экспорт
+
+Эти endpoints доступны только администраторам.
+
+#### GET `/api/reports/monthly-summary`
+Данные для ежемесячного финансового отчета (JSON превью)
+
+**Query параметры:**
+- `from` (string, optional) — дата начала в формате `YYYY-MM`.
+- `to` (string, optional) — дата конца в формате `YYYY-MM`.
+
+**Ответ:**
+```json
+[
+  {
+    "year": 2025,
+    "month": 1,
+    "revenue_total": "150000.00",
+    "expense_total": "100000.00",
+    "profit_total": "50000.00",
+    "profit_margin_pct": "33.33"
+  }
+]
+```
+
+---
+
+#### GET `/api/reports/monthly-summary/export`
+Экспорт ежемесячного финансового отчета
+
+**Query параметры:**
+- `from`, `to` — те же, что и выше.
+- `format` (string, optional) — `csv` (по умолчанию) или `xlsx`.
+
+**Ответ:** Файл выбранного формата.
+
+---
+
+#### GET `/api/reports/budget-plan-fact`
+Данные для отчета План vs Факт (JSON превью)
+
+**Query параметры:**
+- `from` (string, optional) — `YYYY-MM`.
+- `to` (string, optional) — `YYYY-MM`.
+
+**Ответ:**
+```json
+[
+  {
+    "year": 2025,
+    "month": 1,
+    "category": "Офис",
+    "planned_amount": "50000.00",
+    "actual_amount": "48000.00",
+    "delta_amount": "-2000.00",
+    "delta_pct": "-4.00"
+  }
+]
+```
+
+---
+
+#### GET `/api/reports/budget-plan-fact/export`
+Экспорт отчета План vs Факт
+
+**Query параметры:**
+- `from`, `to` — те же, что и выше.
+- `format` (string, optional) — `csv` (по умолчанию) или `xlsx`.
+
+**Ответ:** Файл выбранного формата.
+
+---
+
+#### GET `/api/reports/operations/export`
+Экспорт детальных операций (только экспорт)
+
+**Query параметры:**
+- `type` (string, required) — `expenses` или `revenues`.
+- `from` (string, optional) — `YYYY-MM-DD`.
+- `to` (string, optional) — `YYYY-MM-DD`.
+- `format` (string, optional) — `csv` (по умолчанию) или `xlsx`.
+
+**Ответ:** Файл выбранного формата.
 
 ---
 
@@ -284,21 +317,17 @@ const login = async (email, password) => {
 };
 
 // Получение расходов за месяц
-const getExpenses = async () => {
-  const response = await axios.get('/api/expenses', {
-    params: { period: 'month' }
+const getRevenueChart = async (months = 12) => {
+  const response = await axios.get('/api/charts/revenue', {
+    params: { months }
   });
   return response.data;
 };
 
-// Получение расходов за произвольный период
-const getCustomExpenses = async (startDate, endDate) => {
-  const response = await axios.get('/api/expenses', {
-    params: {
-      period: 'custom',
-      start_date: startDate,
-      end_date: endDate
-    }
+// Получение сравнения бюджета (админ)
+const getBudgetVsFact = async (year, month) => {
+  const response = await axios.get('/api/charts/budget-vs-fact', {
+    params: { year, month }
   });
   return response.data;
 };
@@ -313,8 +342,8 @@ curl -X POST http://localhost:8080/api/login \
   -d '{"email":"admin@app.me","password":"admin"}' \
   -c cookies.txt
 
-# Получение расходов (с cookie сессии)
-curl -X GET "http://localhost:8080/api/expenses?period=month" \
+# Получение данных графика (с cookie сессии)
+curl -X GET "http://localhost:8080/api/charts/revenue?months=12" \
   -b cookies.txt
 
 # Выход
@@ -324,31 +353,13 @@ curl -X POST http://localhost:8080/api/logout \
 
 ---
 
-## Фильтрация и сортировка
+## Фильтрация и агрегация
 
 ### Периоды
+В отличие от транзакционных данных, графики используют параметр `months` для определения глубины анализа в месяцах.
 
-| Значение | Описание |
-|----------|----------|
-| `month` | Текущий месяц |
-| `quarter` | Текущий квартал |
-| `year` | Текущий год |
-| `custom` | Произвольный период (требует start_date и end_date) |
-
-### Категории расходов
-
-- `office` — офисные расходы
-- `salaries` — зарплаты
-- `marketing` — маркетинг
-- `equipment` — оборудование
-- `other` — прочее
-
-### Источники доходов
-
-- `sales` — продажи
-- `services` — услуги
-- `investments` — инвестиции
-- `other` — прочее
+### Категории
+Категории в агрегированных данных соответствуют категориям из исходных таблиц `expenses` и `budgets`.
 
 ---
 
@@ -356,8 +367,8 @@ curl -X POST http://localhost:8080/api/logout \
 
 1. **CSRF защита:** При работе через браузер необходимо сначала получить CSRF cookie через `/sanctum/csrf-cookie`
 2. **CORS:** Настроен для работы с `http://localhost:5173` (Vite dev server)
-3. **Кэширование:** Рекомендуется кэшировать данные на клиенте для уменьшения нагрузки
-4. **Rate limiting:** Не настроен (можно добавить при необходимости)
+3. **Data Mart:** Данные в графиках могут обновляться с задержкой, если не запущен процесс пересчета витрин.
+4. **Thin Frontend:** Вся логика агрегации вынесена на сторону сервера.
 
 ---
 
@@ -374,7 +385,7 @@ curl -X POST http://localhost:8080/api/logout \
 
 ```javascript
 // В консоли браузера после успешного входа
-fetch('http://localhost:8080/api/expenses?period=month', {
+fetch('http://localhost:8080/api/charts/revenue?months=6', {
   credentials: 'include'
 })
   .then(res => res.json())
