@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webgraphs-ingress
+  namespace: webgraphs
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: webgraphs.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 80

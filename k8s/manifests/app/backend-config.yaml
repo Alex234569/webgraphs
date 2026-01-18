@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: webgraphs
+data:
+  APP_NAME: WebGraphs
+  APP_ENV: production
+  APP_DEBUG: "false"
+  APP_URL: http://webgraphs.local:8080
+  DB_CONNECTION: mysql
+  DB_HOST: mysql
+  DB_PORT: "3306"
+  DB_DATABASE: webgraphs
+  DB_USERNAME: webgraphs_user
+  QUEUE_CONNECTION: database
+

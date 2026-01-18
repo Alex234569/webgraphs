@@ -5,6 +5,10 @@ use App\Http\Controllers\Api\ChartsController;
 use App\Http\Controllers\Api\ReportController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok']);
+});
+
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
 Route::get('/me', [AuthController::class, 'me'])->middleware('auth');

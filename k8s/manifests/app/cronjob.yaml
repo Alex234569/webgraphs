@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: metrics-rebuild
+  namespace: webgraphs
+spec:
+  schedule: "0 2 * * *" # Каждый день в 2 часа ночи
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: php
+              image: webgraphs-backend-php:latest
+              imagePullPolicy: Never
+              command: ["php", "artisan", "metrics:rebuild", "--from=2024-01", "--to=2026-12"]
+              envFrom:
+                - configMapRef:
+                    name: backend-config
+              env:
+                - name: APP_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: backend-secret
+                      key: APP_KEY
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: backend-secret
+                      key: DB_PASSWORD
+          restartPolicy: OnFailure
